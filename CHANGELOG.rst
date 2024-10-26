@@ -1,3 +1,6 @@
+0.9.20241027
+------------
+-  Feature enhancement: codebase improved via deepsource: pass #1, imports fixed
 
 0.9.20241013
 ------------
