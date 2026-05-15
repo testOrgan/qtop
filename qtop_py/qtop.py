@@ -1083,9 +1083,14 @@ class WNOccupancy(object):
         workernode_list = cluster.workernode_list
         term_columns = viewport.h_term_size
         min_masking_threshold = int(config["workernodes_matrix"][0]["wn id lines"]["min_masking_threshold"])
-        if args.NOMASKING and min(workernode_list) > min_masking_threshold:
+        if not wn_number or not workernode_list:
+            return 0, 0, 0
+
+        numeric_workernodes = [wn for wn in workernode_list if isinstance(wn, int)]
+        first_workernode = min(numeric_workernodes) if numeric_workernodes else 1
+        if args.NOMASKING and first_workernode > min_masking_threshold:
             # exclude unneeded first empty nodes from the matrix
-            start = min(workernode_list) - 1
+            start = first_workernode - 1
 
         # Extra matrices may be needed if the WNs are more than the screen width can hold.
         if wn_number > start:  # start will either be 1 or (masked >= config['min_masking_threshold'] + 1)
@@ -1093,7 +1098,7 @@ class WNOccupancy(object):
         elif args.REMAP:  # was: ***wn_number < start*** and len(cluster.node_subclusters) > 1:  # Remapping
             extra_matrices_nr = int(ceil(wn_number / float(term_columns - DEADWEIGHT))) - 1
         else:
-            raise NotImplementedError
+            extra_matrices_nr = 0
 
         if config["USER_CUT_MATRIX_WIDTH"]:  # if the user defines a custom cut (in the configuration file)
             stop = start + config["USER_CUT_MATRIX_WIDTH"]
@@ -1145,6 +1150,8 @@ class WNOccupancy(object):
         elem_identifier = [d for d in config["workernodes_matrix"] if part_name in d][0]  # jeeez
         part_name_idx = config["workernodes_matrix"].index(elem_identifier)
         user_max_len = int(config["workernodes_matrix"][part_name_idx][part_name]["max_len"])
+        if not self.cluster.workernode_dict:
+            return OrderedDict()
         try:
             real_max_len = max([len(self.cluster.workernode_dict[_node][yaml_key]) for _node in self.cluster.workernode_dict])
         except KeyError:
@@ -1287,8 +1294,8 @@ class WNOccupancy(object):
             try:
                 user_queue = jobid_to_user_to_queue[job]
             except KeyError as KeyErrorValue:
-                logging.critical("There seems to be a problem with the qstat output. " "A Job (ID %s) has gone rogue. " "Please check with the SysAdmin." % (str(KeyErrorValue)))
-                raise KeyError
+                logging.warning("There seems to be a problem with the qstat output. " "A Job (ID %s) has gone rogue. " "Please check with the SysAdmin." % (str(KeyErrorValue)))
+                continue
             else:
                 user, queue = user_queue
                 yield user, str(core), queue
@@ -1873,7 +1880,7 @@ class Cluster(object):
         if not self.worker_nodes:
             return None  # TODO ? what to return instead of cluster?
 
-        re_nodename = r"(^[A-Za-z0-9-]+)(?=\.|$)" if not self.args.ANONYMIZE else r"\w_anon_wn_\d+"
+        re_nodename = r"(^[A-Za-z0-9_-]+)(?=\.|$)" if not self.args.ANONYMIZE else r"\w_anon_wn_\d+"
 
         self.node_subclusters, self.workernode_list, self.offdown_nodes, self.working_cores, max_np, _all_str_digits_with_empties = self.get_wn_list_and_stats(
             self.workernode_list, self.node_subclusters, self.worker_nodes, re_nodename
@@ -1952,14 +1959,18 @@ class Cluster(object):
 
         _all_str_digits = list(filter(lambda x: x != "", all_str_digits_with_empties))
         _all_digits = [int(digit) for digit in _all_str_digits]
+        numeric_workernodes = [wn for wn in self.workernode_list if isinstance(wn, int)]
+        has_mixed_or_non_numeric_wns = len(numeric_workernodes) != len(self.workernode_list)
+        has_exotic_starting_wn = bool(numeric_workernodes) and min(numeric_workernodes) >= int(self.config["exotic_starting_wn_nr"])
 
         if (
             self.args.BLINDREMAP
             or len(self.node_subclusters) > 1
-            or min(self.workernode_list) >= int(self.config["exotic_starting_wn_nr"])
+            or has_exotic_starting_wn
             or self.offdown_nodes >= self.total_wn * float(self.config["percentage"])
             or len(all_str_digits_with_empties) != len(_all_str_digits)
             or len(_all_digits) != len(_all_str_digits)
+            or has_mixed_or_non_numeric_wns
         ):
             REMAP = True
         else:
@@ -1971,13 +1982,11 @@ class Cluster(object):
 
             subclusters = len(self.node_subclusters) > 1 and "there are different WN namings, e.g. wn001, wn002, ..., ps001, ps002, ... etc" or False
 
-            exotic_starting = (
-                min(self.workernode_list) >= int(self.config["exotic_starting_wn_nr"]) and "first starting numbering of a WN very high; would thus require too much unused space" or False
-            )
+            exotic_starting = has_exotic_starting_wn and "first starting numbering of a WN very high; would thus require too much unused space" or False
 
             percentage_unassigned = len(all_str_digits_with_empties) != len(_all_str_digits) and "more than %s of nodes have are down/offline" % float(self.config["percentage"]) or False
 
-            numbering_collisions = min(self.workernode_list) >= int(self.config["exotic_starting_wn_nr"]) and "there are numbering collisions" or False
+            numbering_collisions = has_mixed_or_non_numeric_wns and "there are numbering collisions or non-numbered WNs" or False
 
             print()
             logging.debug("Remapping decided due to: \n\t %s" % filter(None, [user_request, subclusters, exotic_starting, percentage_unassigned, numbering_collisions]))
