@@ -258,6 +258,25 @@ def test_process_code(fin, code):
     assert process_code(fin) == code
 
 
+def test_process_line_keeps_unsafe_list_expression_as_text():
+    key_container, container = process_line(
+        [0, "danger:", "[__import__('os').system('touch should_not_exist')]"],
+        None,
+        None,
+        {},
+    )
+
+    assert key_container == {"danger": ["__import__('os').system('touch should_not_exist')"]}
+    assert container == ["__import__('os').system('touch should_not_exist')"]
+
+
+def test_process_line_expands_literal_tuple_list():
+    key_container, container = process_line([0, "term_size:", "[53, 176]"], None, None, {})
+
+    assert key_container == {"term_size": [53, 176]}
+    assert container == [53, 176]
+
+
 # @pytest.mark.current
 @pytest.mark.parametrize(
     "dict_a, dict_b",

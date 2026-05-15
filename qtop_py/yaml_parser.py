@@ -10,9 +10,29 @@
 
 import os
 import logging
+from ast import literal_eval
 
 
 ## TODO: black sheep
+
+
+def literal_or_original(value):
+    try:
+        return literal_eval(value)
+    except (ValueError, SyntaxError):
+        return value
+
+
+def expand_single_literal_list(container):
+    if len(container) != 1 or not isinstance(container[0], str):
+        return container
+    literal_value = literal_or_original(container[0])
+    if literal_value == container[0]:
+        return container
+    try:
+        return list(literal_value)
+    except TypeError:
+        return container
 
 
 def fix_config_list(config_list):
@@ -242,11 +262,8 @@ def process_line(list_line, fin, get_lines, parent_container):
             # container = [container[1:-1]] if container.startswith('[') else container
             container = container[1:-1].split(", ") if container.startswith("[") else container
             container = "" if container in ("''", '""') else container
-            if len(container) == 1 and isinstance(container, list) and isinstance(container[0], str):
-                try:
-                    container = list(eval(container[0]))
-                except NameError:
-                    pass
+            if isinstance(container, list):
+                container = expand_single_literal_list(container)
             return {"-": [{key.rstrip(":"): container}]}, container  # list
 
         elif container.endswith("|"):
@@ -258,13 +275,10 @@ def process_line(list_line, fin, get_lines, parent_container):
                 return {"-": [container]}, container  # was parent_container******was :[container]}, container
             else:  # i.e. testkey: testvalue
                 container = [container[1:-1]] if container.startswith("[") else container  # list
-                if len(container) == 1 and isinstance(container, list) and isinstance(container[0], str):
-                    try:
-                        container = list(eval(container[0]))
-                    except NameError:
-                        pass
+                if isinstance(container, list):
+                    container = expand_single_literal_list(container)
                 elif container.startswith("'") and container.endswith("'"):
-                    container = eval(container)
+                    container = literal_or_original(container)
                 return {key.rstrip(":"): container}, container  # was parent_container#str
     else:
         raise ValueError("Didn't anticipate that!")
