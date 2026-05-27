@@ -103,6 +103,7 @@ state_abbreviations:
     Rr: running_of_user    
   slurm:
     R: running_of_user
+    RH: hold_of_user  ## requeued_hold_of_user
     PD: queued_of_user
     CA: cancelled_of_user
     CD: finished_of_user

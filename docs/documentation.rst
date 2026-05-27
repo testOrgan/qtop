@@ -551,6 +551,9 @@ State abbreviations
             S: cancelled_of_user
           sge:
              etc etc
+          slurm:
+            R: running_of_user
+            RH: hold_of_user  ## requeued_hold_of_user
 
     ---
 
