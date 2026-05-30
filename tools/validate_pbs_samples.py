@@ -8,6 +8,7 @@ Usage:
 
 import argparse
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -31,9 +32,14 @@ def _tail(text, lines=5):
 
 
 def render_sample(sample_dir, output_dir, timeout, save_output):
+    qtop_home = output_dir / ".home" / sample_dir.name
+    qtop_home.mkdir(parents=True, exist_ok=True)
+    env = os.environ.copy()
+    env["HOME"] = str(qtop_home)
     try:
         proc = subprocess.run(
             ["./qtop", "-b", "pbs", "-s", str(sample_dir), "-c", "ON"],
+            env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,

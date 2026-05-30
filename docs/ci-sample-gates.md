@@ -35,6 +35,8 @@ Policy:
   case fails CI.
 - Rendered qtop output, SVG terminal screenshots, stderr, command lines, and
   `summary.json` are written under `artifacts/sample-gate/`.
+- Each qtop subprocess receives an isolated `HOME` under its artifact
+  directory, so log creation does not depend on a writable runner home.
 - CI uploads that artifact directory so reviewers can inspect the rendered
   output without rerunning locally.
 

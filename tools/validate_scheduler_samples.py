@@ -8,6 +8,7 @@ GitLab can run the same command without access to the larger artifact corpus.
 import argparse
 import html
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -135,6 +136,12 @@ def discover_cases(schedulers, slurm_samples_dir):
 
 
 def run_case(case, artifact_dir, timeout):
+    case_dir = artifact_dir / case["name"]
+    if case_dir.exists():
+        shutil.rmtree(str(case_dir))
+    qtop_home = case_dir / "home"
+    qtop_home.mkdir(parents=True, exist_ok=True)
+
     command = [
         sys.executable,
         "-m",
@@ -147,18 +154,18 @@ def run_case(case, artifact_dir, timeout):
         "-b",
         case["scheduler"],
     ]
+    env = os.environ.copy()
+    env["HOME"] = str(qtop_home)
     completed = subprocess.run(
         command,
         cwd=str(ROOT),
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         universal_newlines=True,
         timeout=timeout,
     )
 
-    case_dir = artifact_dir / case["name"]
-    if case_dir.exists():
-        shutil.rmtree(str(case_dir))
     write_text(case_dir / "stdout.ans", completed.stdout)
     write_text(case_dir / "stderr.log", completed.stderr)
     write_text(case_dir / "command.txt", " ".join(command) + "\n")
