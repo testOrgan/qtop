@@ -73,6 +73,14 @@ def write_text(path, text):
     path.write_text(text, encoding="utf-8")
 
 
+def output_text(value):
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", "replace")
+    return value
+
+
 def display_path(path):
     try:
         return str(path.relative_to(ROOT))
@@ -156,15 +164,35 @@ def run_case(case, artifact_dir, timeout):
     ]
     env = os.environ.copy()
     env["HOME"] = str(qtop_home)
-    completed = subprocess.run(
-        command,
-        cwd=str(ROOT),
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        timeout=timeout,
-    )
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=str(ROOT),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = output_text(exc.stdout)
+        stderr = output_text(exc.stderr)
+        write_text(case_dir / "stdout.ans", stdout)
+        write_text(case_dir / "stderr.log", stderr)
+        write_text(case_dir / "command.txt", " ".join(command) + "\n")
+        write_svg_screenshot(case_dir / "screenshot.svg", stdout)
+        return {
+            "name": case["name"],
+            "scheduler": case["scheduler"],
+            "source": display_path(case["source"]),
+            "command": command,
+            "returncode": None,
+            "artifact": display_path(case_dir),
+            "screenshot": display_path(case_dir / "screenshot.svg"),
+            "ok": False,
+            "missing_markers": [],
+            "error": "timeout after %s seconds" % timeout,
+        }
 
     write_text(case_dir / "stdout.ans", completed.stdout)
     write_text(case_dir / "stderr.log", completed.stderr)
@@ -216,18 +244,7 @@ def main():
     results = []
 
     for case in cases:
-        try:
-            result = run_case(case, artifact_dir, args.timeout)
-        except subprocess.TimeoutExpired:
-            result = {
-                "name": case["name"],
-                "scheduler": case["scheduler"],
-                "source": display_path(case["source"]),
-                "returncode": None,
-                "artifact": display_path(artifact_dir / case["name"]),
-                "ok": False,
-                "error": "timeout after %s seconds" % args.timeout,
-            }
+        result = run_case(case, artifact_dir, args.timeout)
         results.append(result)
         print("%s: %s" % (result["name"], "ok" if result["ok"] else "failed"))
 

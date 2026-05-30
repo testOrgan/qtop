@@ -34,7 +34,8 @@ Policy:
 - `SAMPLE_GATE_MAX_FAILURES=0` is the default and means any failed scheduler
   case fails CI.
 - Rendered qtop output, SVG terminal screenshots, stderr, command lines, and
-  `summary.json` are written under `artifacts/sample-gate/`.
+  `summary.json` are written under `artifacts/sample-gate/`, including for
+  non-zero and timeout failures.
 - Each qtop subprocess receives an isolated `HOME` under its artifact
   directory, so log creation does not depend on a writable runner home.
 - CI uploads that artifact directory so reviewers can inspect the rendered
