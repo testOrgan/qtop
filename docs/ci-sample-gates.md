@@ -11,8 +11,13 @@ That target runs unit tests, the fast committed scheduler sample gate, and the
 fortification checks. GitHub Actions and GitLab CI call the same target so the
 meaning of a failure is the same on both platforms.
 
+Provider-specific aliases such as `make github-ci`, `make gitlab-ci`,
+`make github-build`, and `make gitlab-build` deliberately resolve back to the
+same Makefile targets. The YAML files stay thin and provider-facing while the
+actual validation contract remains local and reviewable.
+
 The GitHub Actions workflows pin third-party actions to full commit SHAs and
-sets `permissions: contents: read`, because the jobs only need repository read
+set `permissions: contents: read`, because the jobs only need repository read
 access plus artifact upload.
 
 Python packages installed by CI, including transitive helper packages, are
@@ -46,6 +51,9 @@ Policy:
   directory, so log creation does not depend on a writable runner home.
 - CI uploads that artifact directory so reviewers can inspect the rendered
   output without rerunning locally.
+- `qtop_py/contrib/func_tests.sh` delegates to this same sample gate, so the
+  historical manual wrapper exercises the current CI path instead of carrying a
+  separate drift-prone shell implementation.
 
 ## Python 3.6 / AlmaLinux 8 gate
 

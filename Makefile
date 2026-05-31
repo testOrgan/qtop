@@ -1,8 +1,9 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help test coverage sample-gate test-pbs-samples test-slurm-samples fortifications compat-py36 ci build dist version confirm
+.PHONY: help ci-deps test coverage sample-gate test-pbs-samples test-slurm-samples fortifications compat-py36 ci github-ci gitlab-ci build github-build gitlab-build dist version confirm
 
 PYTHON ?= python3
+PIP ?= $(PYTHON) -m pip
 SAMPLE_GATE_SCHEDULERS ?= pbs,sge,slurm
 SAMPLE_GATE_MAX_FAILURES ?= 0
 SAMPLE_GATE_ARTIFACT_DIR ?= artifacts/sample-gate
@@ -19,6 +20,10 @@ PBS_FAILURE_ARG := $(if $(PBS_MAX_FAILURES),--max-failures $(PBS_MAX_FAILURES),)
 help: ## Show this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+ci-deps: ## Install pinned CI Python dependencies
+	$(PIP) install --upgrade pip==24.0
+	$(PIP) install -r requirements-ci.txt
 
 test: ## Run the Python test suite
 	$(PYTHON) -m pytest
@@ -46,8 +51,16 @@ compat-py36: ## Run dependency-light Python 3.6 compatibility checks
 
 ci: test sample-gate fortifications ## Run the shared local/CI validation path
 
+github-ci: ci ## GitHub Actions entry point for test validation
+
+gitlab-ci: ci ## GitLab CI entry point for test validation
+
 build: ## Build source and wheel distributions
 	$(PYTHON) -m build --no-isolation
+
+github-build: build ## GitHub Actions entry point for package builds
+
+gitlab-build: build ## GitLab CI entry point for package builds
 
 dist: build ## Alias for build, matching common release target names
 

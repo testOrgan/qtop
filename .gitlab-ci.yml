@@ -8,13 +8,12 @@ modern-python:
   before_script:
     - apt-get update
     - apt-get install -y --no-install-recommends make git
-    - python -m pip install --upgrade pip==24.0
-    - python -m pip install -r requirements-ci.txt
+    - make ci-deps PYTHON=python
     - export TARGET_BRANCH="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-develop}"
     - git fetch origin "${TARGET_BRANCH}:refs/remotes/origin/${TARGET_BRANCH}"
     - export FORTIFY_BASE_REF="origin/${TARGET_BRANCH}"
   script:
-    - make ci
+    - make gitlab-ci PYTHON=python
   artifacts:
     when: always
     paths:
@@ -45,10 +44,9 @@ build:
   before_script:
     - apt-get update
     - apt-get install -y --no-install-recommends make
-    - python -m pip install --upgrade pip==24.0
-    - python -m pip install -r requirements-ci.txt
+    - make ci-deps PYTHON=python
   script:
-    - make build
+    - make gitlab-build PYTHON=python
   artifacts:
     paths:
       - dist/
