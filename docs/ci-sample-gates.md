@@ -73,24 +73,6 @@ make compat-py36 PYTHON=python3
 That target compiles `qtop_py` and `tools`, then runs the same fast sample gate
 with artifacts under `artifacts/sample-gate-py36/`.
 
-## Larger archived PBS sweep
-
-The larger PBS corpus is intentionally not vendored in this repository. When
-`fgeorgatos/qtop-test-repo` is available next to this checkout, run:
-
-```bash
-make test-pbs-samples \
-  PBS_SAMPLES_DIR=../qtop-test-repo/qtop5/results \
-  PBS_SAMPLE_LIMIT=10 \
-  PBS_MAX_FAILURES=50 \
-  PBS_SAMPLE_TIMEOUT=8
-```
-
-`PBS_SAMPLE_LIMIT` controls how many rendered `.ans` files are saved.
-`PBS_MAX_FAILURES` enables a full-corpus scan and fails when the failed sample
-count exceeds the configured budget. The command writes `manifest.json`,
-`failures.json`, and `summary.json` under `PBS_OUTPUT_DIR`.
-
 ## Fortifications
 
 `make fortifications` compares the current branch against

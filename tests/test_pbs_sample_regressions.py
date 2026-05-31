@@ -3,7 +3,6 @@ from types import SimpleNamespace
 
 from qtop_py import qtop
 from qtop_py.plugins.pbs import PBSStatExtractor
-from tools import validate_pbs_samples
 
 
 def test_find_matrices_width_handles_empty_worker_nodes():
@@ -66,8 +65,3 @@ def test_worker_node_name_regex_accepts_underscores():
     import re
 
     assert re.search(re_nodename, "trueno_ita00.csic.es").group(0) == "trueno_ita00"
-
-
-def test_pbs_sample_failure_tail_normalizes_timeout_output():
-    assert validate_pbs_samples._tail(None) == []
-    assert validate_pbs_samples._tail(b"first\nsecond\n", lines=1) == ["second"]

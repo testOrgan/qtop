@@ -9,13 +9,10 @@ SAMPLE_GATE_MAX_FAILURES ?= 0
 SAMPLE_GATE_ARTIFACT_DIR ?= artifacts/sample-gate
 PBS_SAMPLES_DIR ?= ../qtop-test-repo/qtop5/results
 PBS_SAMPLE_LIMIT ?= 100
-PBS_SAMPLE_TIMEOUT ?= 8
-PBS_MAX_FAILURES ?=
 PBS_OUTPUT_DIR ?= /tmp/qtop-pbs-rendered
 SLURM_SAMPLES_DIR ?= tests/plugins/slurm_samples
 SLURM_OUTPUT_DIR ?= /tmp/qtop-slurm-rendered
 FORTIFY_BASE_REF ?= origin/develop
-PBS_FAILURE_ARG := $(if $(PBS_MAX_FAILURES),--max-failures $(PBS_MAX_FAILURES),)
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -36,7 +33,7 @@ sample-gate: ## Run fast committed PBS/SGE/SLURM qtop sample gates
 	$(PYTHON) tools/validate_scheduler_samples.py --schedulers $(SAMPLE_GATE_SCHEDULERS) --max-failures $(SAMPLE_GATE_MAX_FAILURES) --artifact-dir $(SAMPLE_GATE_ARTIFACT_DIR)
 
 test-pbs-samples: ## Run the larger archived PBS sample sweep
-	$(PYTHON) tools/validate_pbs_samples.py $(PBS_SAMPLES_DIR) --limit $(PBS_SAMPLE_LIMIT) --timeout $(PBS_SAMPLE_TIMEOUT) $(PBS_FAILURE_ARG) --output $(PBS_OUTPUT_DIR)
+	$(PYTHON) tools/validate_pbs_samples.py $(PBS_SAMPLES_DIR) --limit $(PBS_SAMPLE_LIMIT) --output $(PBS_OUTPUT_DIR)
 
 test-slurm-samples: ## Run Slurm parser tests and render committed Slurm samples
 	$(PYTHON) -m pytest tests/plugins/test_slurm.py
