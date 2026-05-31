@@ -3,7 +3,7 @@ stages:
   - build
 
 modern-python:
-  image: python:3.12-bookworm
+  image: python:3.12.3-bookworm
   stage: test
   before_script:
     - apt-get update
@@ -36,7 +36,7 @@ almalinux-python36:
       - artifacts/sample-gate-py36/
 
 build:
-  image: python:3.12-bookworm
+  image: python:3.12.3-bookworm
   stage: build
   needs:
     - modern-python

@@ -19,7 +19,6 @@ help: ## Show this help
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 ci-deps: ## Install pinned CI Python dependencies
-	$(PIP) install --upgrade pip==24.0
 	$(PIP) install -r requirements-ci.txt
 
 test: ## Run the Python test suite

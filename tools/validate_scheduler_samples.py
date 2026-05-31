@@ -26,12 +26,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+CONTRIB = ROOT / "qtop_py" / "contrib"
 
 STATIC_CASES = {
     "pbs": [
         {
             "name": "pbs-contrib",
-            "source": ROOT / "qtop_py" / "contrib",
+            "source": CONTRIB,
+            "args": ["-c", "ON", "-s", str(CONTRIB), "-raF", "-b", "pbs"],
             "markers": [
                 "Summary: Total:829 Up:819 Free:91 Nodes",
                 "7629/7872 cores",
@@ -44,7 +46,8 @@ STATIC_CASES = {
     "sge": [
         {
             "name": "sge-contrib",
-            "source": ROOT / "qtop_py" / "contrib",
+            "source": CONTRIB,
+            "args": ["-s", str(CONTRIB), "-c", "ON", "-Fadvv", "-b", "sge"],
             "markers": [
                 "Summary: Total:17 Up:17 Free:4 Nodes",
                 "61/408 cores",
@@ -74,6 +77,11 @@ COMMON_RENDER_MARKERS = [
 def normalize_output(text):
     text = ANSI_RE.sub("", text)
     return re.sub(r"\s+", " ", text)
+
+
+def normalize_for_artifact(text):
+    lines = ANSI_RE.sub("", text).splitlines()
+    return "\n".join(line.rstrip() for line in lines).strip() + ("\n" if lines else "")
 
 
 def write_text(path, text):
@@ -158,18 +166,10 @@ def run_case(case, artifact_dir, timeout):
     qtop_home = case_dir / "home"
     qtop_home.mkdir(parents=True, exist_ok=True)
 
-    command = [
-        sys.executable,
-        "-m",
-        "qtop_py.cli",
-        "-s",
-        str(case["source"]),
-        "-c",
-        "ON",
-        "-F",
-        "-b",
-        case["scheduler"],
-    ]
+    command = [sys.executable, "-m", "qtop_py.cli"] + case.get(
+        "args",
+        ["-s", str(case["source"]), "-c", "ON", "-F", "-b", case["scheduler"]],
+    )
     env = os.environ.copy()
     env["HOME"] = str(qtop_home)
     try:
@@ -186,6 +186,7 @@ def run_case(case, artifact_dir, timeout):
         stdout = output_text(exc.stdout)
         stderr = output_text(exc.stderr)
         write_text(case_dir / "stdout.ans", stdout)
+        write_text(case_dir / "rendered.normalized.txt", normalize_for_artifact(stdout))
         write_text(case_dir / "stderr.log", stderr)
         write_text(case_dir / "command.txt", " ".join(command) + "\n")
         write_svg_screenshot(case_dir / "screenshot.svg", stdout)
@@ -203,6 +204,7 @@ def run_case(case, artifact_dir, timeout):
         }
 
     write_text(case_dir / "stdout.ans", completed.stdout)
+    write_text(case_dir / "rendered.normalized.txt", normalize_for_artifact(completed.stdout))
     write_text(case_dir / "stderr.log", completed.stderr)
     write_text(case_dir / "command.txt", " ".join(command) + "\n")
     write_svg_screenshot(case_dir / "screenshot.svg", completed.stdout)

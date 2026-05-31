@@ -46,13 +46,17 @@ Sources:
 - SGE: `qtop_py/contrib`
 - Slurm: every directory under `tests/plugins/slurm_samples`
 
+The PBS and SGE cases intentionally reuse the historical contrib wrapper flags
+(`-raF` for PBS and `-Fadvv` for SGE) while still running through the shared
+Python gate, so the old manual path and the CI path exercise the same samples.
+
 Policy:
 
 - `SAMPLE_GATE_MAX_FAILURES=0` is the default and means any failed scheduler
   case fails CI.
-- Rendered qtop output, SVG terminal screenshots, stderr, command lines, and
-  `summary.json` are written under `artifacts/sample-gate/`, including for
-  non-zero and timeout failures.
+- Rendered qtop output, ANSI-stripped normalized output, SVG terminal
+  screenshots, stderr, command lines, and `summary.json` are written under
+  `artifacts/sample-gate/`, including for non-zero and timeout failures.
 - Each qtop subprocess receives an isolated `HOME` under its artifact
   directory, so log creation does not depend on a writable runner home.
 - CI uploads that artifact directory so reviewers can inspect the rendered
