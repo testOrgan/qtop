@@ -102,6 +102,8 @@ count exceeds the configured budget. The command writes `manifest.json`,
 
 The generated/binary path check is deliberately conservative because
 `CONTRIBUTING.md` asks contributors not to store heavy artifacts in `qtop`.
+`make lint` is an alias for these source and diff health checks, while
+`make format-check` runs `git diff --check`.
 
 ## Coverage roadmap
 
