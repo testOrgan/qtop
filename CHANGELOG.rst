@@ -1,3 +1,7 @@
+0.9.20260602
+------------
+-  PR #444 merge
+
 0.9.20260515
 ------------
 -  Documentation: update CONTRIBUTING.md for AI-assisted PRs
