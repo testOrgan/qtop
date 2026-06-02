@@ -21,6 +21,7 @@ from qtop_py.qtop import (
     SchedulerNotSpecified,
     NoSchedulerFound,
     get_date_obj_from_str,
+    get_detail_of_name,
 )
 
 
@@ -74,6 +75,34 @@ def test_extract_regex_detail_supports_configured_re_search():
     field = "User Name <alice@example.org>"
 
     assert extract_regex_detail("re.search('(?<=<)[^<>]+(?=>)', field).group(0)", field) == "alice@example.org"
+
+
+def test_get_detail_of_name_falls_back_for_unsupported_regex(monkeypatch):
+    import qtop_py.qtop as qtop
+
+    class Args:
+        GET_GECOS = False
+
+    class Process:
+        def communicate(self, _input):
+            return ("alice:x:1:1:Alice Example:/home/alice:/bin/sh\n", "")
+
+    monkeypatch.setattr(qtop, "args", Args(), raising=False)
+    monkeypatch.setattr(
+        qtop,
+        "config",
+        {
+            "extract_info": {
+                "field_to_use": "5",
+                "regex": "__import__('pathlib').Path('/tmp/should-not-run').touch()",
+                "user_details_cache": "cat /dev/null",
+            }
+        },
+        raising=False,
+    )
+    monkeypatch.setattr(qtop.subprocess, "Popen", lambda *args, **kwargs: Process())
+
+    assert get_detail_of_name([]) == {"alice": "Alice Example"}
 
 
 def test_update_config_with_cmdline_vars_does_not_execute_option_values(tmp_path):

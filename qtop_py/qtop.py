@@ -403,7 +403,7 @@ def get_detail_of_name(account_jobs_table):
         else:
             try:
                 detail = extract_regex_detail(regex, field)
-            except (AttributeError, TypeError):
+            except (AttributeError, TypeError, ValueError):
                 detail = field.strip()
             finally:
                 detail_of_name[user] = detail

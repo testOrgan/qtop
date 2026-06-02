@@ -24,10 +24,10 @@ almalinux-python36:
   stage: test
   before_script:
     - dnf -y install make findutils
-    - dnf -y install python36 || dnf -y install python3
+    - dnf -y install python36
   script:
     - |
-      PYTHON_BIN="$(command -v python3.6 || command -v python3)"
+      PYTHON_BIN="$(command -v python3.6)"
       "$PYTHON_BIN" --version
       make compat-py36 PYTHON="$PYTHON_BIN"
   artifacts:
@@ -44,7 +44,6 @@ build:
   before_script:
     - apt-get update
     - apt-get install -y --no-install-recommends make
-    - make ci-deps PYTHON=python
   script:
     - make gitlab-build PYTHON=python
   artifacts:

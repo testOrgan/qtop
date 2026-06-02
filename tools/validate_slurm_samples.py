@@ -25,11 +25,14 @@ def iter_sample_dirs(samples_dir):
 def run_qtop(sample_name, sample_dir, output_dir):
     env = os.environ.copy()
     env["QTOP_SCHEDULER"] = "slurm"
-    os.makedirs(output_dir, exist_ok=True)
-    qtop_home = os.path.join(output_dir, ".home", sample_name)
+    rendered_output_dir = os.path.abspath(output_dir)
+    os.makedirs(rendered_output_dir, exist_ok=True)
+    # qtop writes user-local logs under HOME, so each sample gets an isolated
+    # HOME inside the rendered-output tree: <output>/.home/<sample-name>.
+    qtop_home = os.path.join(rendered_output_dir, ".home", sample_name)
     os.makedirs(qtop_home, exist_ok=True)
     env["HOME"] = qtop_home
-    command = [sys.executable, "-m", "qtop_py.cli", "-b", "slurm", "-s", sample_dir, "-O", "-o", "savepath=%s" % output_dir]
+    command = [sys.executable, "-m", "qtop_py.cli", "-b", "slurm", "-s", sample_dir, "-O", "-o", "savepath=%s" % rendered_output_dir]
     completed = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, universal_newlines=True)
     if completed.returncode:
         raise RuntimeError("qtop failed for %s:\nSTDOUT:\n%s\nSTDERR:\n%s" % (sample_name, completed.stdout, completed.stderr))

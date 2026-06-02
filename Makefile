@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help ci-deps test coverage sample-gate test-pbs-samples test-slurm-samples fortifications lint format-check compat-py36 ci github-ci gitlab-ci build github-build gitlab-build dist version confirm
+.PHONY: help ci-deps test coverage sample-gate test-pbs-samples test-slurm-samples fortifications ruff-check lint format-check compat-py36 ci github-ci gitlab-ci build github-build gitlab-build dist version confirm
 
 PYTHON ?= python3
 PIP ?= $(PYTHON) -m pip
@@ -41,22 +41,25 @@ test-slurm-samples: ## Run Slurm parser tests and render committed Slurm samples
 fortifications: ## Check diff health and reject eval() call sites
 	$(PYTHON) tools/fortifications.py --base-ref $(FORTIFY_BASE_REF)
 
-lint: fortifications ## Alias for source and diff health checks
+ruff-check: ## Run ruff against the source tree
+	$(PYTHON) -m ruff check .
+
+lint: fortifications ## Run dependency-light source and diff health checks
 
 format-check: ## Check the branch diff for whitespace errors
-	git diff --check
+	git diff --check $(FORTIFY_BASE_REF)...HEAD
 
 compat-py36: ## Run dependency-light Python 3.6 compatibility checks
 	find qtop_py tools -name '*.py' -print | xargs $(PYTHON) -m py_compile
 	$(PYTHON) tools/validate_scheduler_samples.py --schedulers $(SAMPLE_GATE_SCHEDULERS) --max-failures $(SAMPLE_GATE_MAX_FAILURES) --artifact-dir $(SAMPLE_GATE_ARTIFACT_DIR)-py36
 
-ci: test sample-gate fortifications format-check ## Run the shared local/CI validation path
+ci: test sample-gate lint ruff-check format-check ## Run the shared local/CI validation path
 
 github-ci: ci ## GitHub Actions entry point for test validation
 
 gitlab-ci: ci ## GitLab CI entry point for test validation
 
-build: ## Build source and wheel distributions
+build: ci-deps ## Build source and wheel distributions with pinned CI build deps
 	$(PYTHON) -m build --no-isolation
 
 github-build: build ## GitHub Actions entry point for package builds

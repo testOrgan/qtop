@@ -17,20 +17,21 @@ Provider-specific aliases such as `make github-ci`, `make gitlab-ci`,
 same Makefile targets. The YAML files stay thin and provider-facing while the
 actual validation contract remains local and reviewable.
 
-The GitHub Actions workflows pin third-party actions to full commit SHAs and
-set `permissions: contents: read`, because the jobs only need repository read
-access plus artifact upload.
+The GitHub Actions workflows pin third-party actions to full commit SHAs, pin
+hosted runners to `ubuntu-24.04`, and set `permissions: contents: read`,
+because the jobs only need repository read access plus artifact upload.
 
 `.github/workflows/build.yml` carries the PR-facing modern Python, AlmaLinux 8,
 and build lanes. `.github/workflows/pytest.yml` stays as a manual
 `workflow_dispatch` pytest check so the historical workflow path remains
 available without duplicating the full PR gate.
 
-Python packages installed by CI, including transitive helper packages, are
-pinned in `requirements-ci.txt`; both GitHub Actions and GitLab CI install from
-that same file before calling the Makefile targets. `make build` uses
-`python -m build --no-isolation` so the build backend also comes from those
-pinned CI requirements instead of being resolved dynamically during the build.
+Python packages installed by CI, including transitive helper packages and ruff,
+are pinned in `requirements-ci.txt`; both GitHub Actions and GitLab CI install
+from that same file before calling the Makefile targets. `make build` depends
+on `make ci-deps` and uses `python -m build --no-isolation` so the build backend
+also comes from those pinned CI requirements instead of being resolved
+dynamically during the build.
 
 ## Fast committed sample gate
 
@@ -71,7 +72,7 @@ Clusters still running RHEL8-family userspace need a dependency-light check.
 The CI job uses an `almalinux:8` container and runs:
 
 ```bash
-make compat-py36 PYTHON=python3
+make compat-py36 PYTHON=python3.6
 ```
 
 That target compiles `qtop_py` and `tools`, then runs the same fast sample gate
@@ -88,8 +89,11 @@ with artifacts under `artifacts/sample-gate-py36/`.
 
 The generated/binary path check is deliberately conservative because
 `CONTRIBUTING.md` asks contributors not to store heavy artifacts in `qtop`.
-`make lint` is an alias for these source and diff health checks, while
-`make format-check` runs `git diff --check`.
+`make lint` keeps the dependency-light source and diff health checks available
+without installing Python packages, `make ruff-check` runs the repository's ruff
+configuration after `make ci-deps` has installed pinned CI dependencies, and
+`make format-check` checks whitespace errors in the branch diff against the
+same `FORTIFY_BASE_REF`.
 
 ## Coverage roadmap
 
@@ -108,7 +112,7 @@ dependency-light and continue to run `make compat-py36`.
 
 ## Develop / CONTRIBUTING.md alignment
 
-Rechecked on 2026-05-31 against `origin/develop` and the current
+Rechecked on 2026-06-02 against `origin/develop` and the current
 `CONTRIBUTING.md`: the PR targets `develop`, keeps generated screenshots and
 logs as CI artifacts rather than repository files, uses DCO signed commits, and
 documents the AI-assisted validation surface in the pull request body.
