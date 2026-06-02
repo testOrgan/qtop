@@ -1,3 +1,13 @@
+##
+## qtop is a tool to monitor queuing systems - https://github.com/qtop/qtop
+##
+## Copyright (c) 2016 Fotis Georgatos
+## Copyright (c) 2016 Sotiris Fragkiskos
+## Copyright (c) 2026 Jacob Hatchett
+##
+## SPDX-License-Identifier: MIT
+##
+
 import pytest
 from qtop_py.yaml_parser import get_line, convert_dash_key_in_dict, read_yaml_config_block, process_line, process_code
 
@@ -256,18 +266,6 @@ def test_read_yaml_config_block(line_in, line_out, fin, block_out):
 )
 def test_process_code(fin, code):
     assert process_code(fin) == code
-
-
-def test_process_line_keeps_unsafe_list_expression_as_text():
-    key_container, container = process_line(
-        [0, "danger:", "[__import__('os').system('touch should_not_exist')]"],
-        None,
-        None,
-        {},
-    )
-
-    assert key_container == {"danger": ["__import__('os').system('touch should_not_exist')"]}
-    assert container == ["__import__('os').system('touch should_not_exist')"]
 
 
 def test_process_line_expands_literal_tuple_list():

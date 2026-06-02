@@ -1,3 +1,13 @@
+##
+## qtop is a tool to monitor queuing systems - https://github.com/qtop/qtop
+##
+## Copyright (c) 2016 Fotis Georgatos
+## Copyright (c) 2016 Sotiris Fragkiskos
+## Copyright (c) 2026 Jacob Hatchett
+##
+## SPDX-License-Identifier: MIT
+##
+
 __author__ = "sfranky"
 try:
     import ujson as json

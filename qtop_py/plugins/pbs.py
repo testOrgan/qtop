@@ -4,6 +4,7 @@
 ## Copyright (c) 2016 Fotis Georgatos
 ## Copyright (c) 2016 Sotiris Fragkiskos
 ## Copyright (c) 2023 Hewlett Packard Enterprise Development LP
+## Copyright (c) 2026 Jacob Hatchett
 ##
 ## SPDX-License-Identifier: MIT
 ##

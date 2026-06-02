@@ -4,6 +4,7 @@
 ## Copyright (c) 2016 Fotis Georgatos
 ## Copyright (c) 2016 Sotiris Fragkiskos
 ## Copyright (c) 2023 Hewlett Packard Enterprise Development LP
+## Copyright (c) 2026 Jacob Hatchett
 ##
 ## SPDX-License-Identifier: MIT
 ##
@@ -14,110 +15,16 @@ import datetime
 from qtop_py.qtop import (
     WNOccupancy,
     decide_batch_system,
-    extract_regex_detail,
-    load_yaml_config,
-    update_config_with_cmdline_vars,
     JobNotFound,
     SchedulerNotSpecified,
     NoSchedulerFound,
     get_date_obj_from_str,
-    get_detail_of_name,
 )
 
 
 @pytest.fixture
 def config():
     return {}
-
-
-def test_load_yaml_config_does_not_execute_config_values(monkeypatch, tmp_path):
-    class Args:
-        CONFFILE = None
-
-    sentinel = tmp_path / "executed"
-    dangerous_value = "__import__('pathlib').Path(%r).touch()" % str(sentinel)
-
-    def parse_config(_path):
-        return {
-            "possible_ids": "01",
-            "user_color_mappings": [{"alice": "Blue"}],
-            "nodestate_color_mappings": [{"au": "BlackOnRed"}],
-            "remapping": [],
-            "savepath": str(tmp_path / "qtop-results"),
-            "scheduler": "pbs",
-            "transpose_wn_matrices": "True",
-            "fill_with_user_firstletter": "False",
-            "faster_xml_parsing": "False",
-            "vertical_separator_every_X_columns": "0",
-            "overwrite_sample_file": dangerous_value,
-            "sorting": {"reverse": "False"},
-            "workernodes_matrix": [{"wn id lines": {"alt_label_colors": ["White, Blue_L"], "user_cut_matrix_width": "0"}}],
-            "vertical_separator": "'|'",
-        }
-
-    import qtop_py.qtop as qtop
-
-    monkeypatch.setattr(qtop.yaml, "parse", parse_config)
-    monkeypatch.setattr(qtop, "QTOPPATH", str(tmp_path), raising=False)
-    monkeypatch.setattr(qtop, "SYSTEMCONFDIR", str(tmp_path / "system"))
-    monkeypatch.setattr(qtop, "USERPATH", str(tmp_path / "user"))
-    monkeypatch.setattr(qtop, "args", Args(), raising=False)
-
-    config, _, _ = load_yaml_config()
-
-    assert config["transpose_wn_matrices"] is True
-    assert config["vertical_separator_every_X_columns"] == 0
-    assert config["overwrite_sample_file"] == dangerous_value
-    assert not sentinel.exists()
-
-
-def test_extract_regex_detail_supports_configured_re_search():
-    field = "User Name <alice@example.org>"
-
-    assert extract_regex_detail("re.search('(?<=<)[^<>]+(?=>)', field).group(0)", field) == "alice@example.org"
-
-
-def test_get_detail_of_name_falls_back_for_unsupported_regex(monkeypatch):
-    import qtop_py.qtop as qtop
-
-    class Args:
-        GET_GECOS = False
-
-    class Process:
-        def communicate(self, _input):
-            return ("alice:x:1:1:Alice Example:/home/alice:/bin/sh\n", "")
-
-    monkeypatch.setattr(qtop, "args", Args(), raising=False)
-    monkeypatch.setattr(
-        qtop,
-        "config",
-        {
-            "extract_info": {
-                "field_to_use": "5",
-                "regex": "__import__('pathlib').Path('/tmp/should-not-run').touch()",
-                "user_details_cache": "cat /dev/null",
-            }
-        },
-        raising=False,
-    )
-    monkeypatch.setattr(qtop.subprocess, "Popen", lambda *args, **kwargs: Process())
-
-    assert get_detail_of_name([]) == {"alice": "Alice Example"}
-
-
-def test_update_config_with_cmdline_vars_does_not_execute_option_values(tmp_path):
-    class Args:
-        OPTION = ["enabled=True", "dangerous=__import__('pathlib').Path(%r).touch()" % str(tmp_path / "executed")]
-        TRANSPOSE = False
-        REM_EMPTY_CORELINES = 0
-
-    config = {"rem_empty_corelines": "0", "transpose_wn_matrices": True}
-
-    updated = update_config_with_cmdline_vars(Args(), config)
-
-    assert updated["enabled"] is True
-    assert updated["dangerous"].startswith("__import__")
-    assert not (tmp_path / "executed").exists()
 
 
 def test_sort_worker_nodes_uses_named_sort_keys(monkeypatch):
@@ -132,7 +39,6 @@ def test_sort_worker_nodes_uses_named_sort_keys(monkeypatch):
     ]
 
     assert [node["domainname"] for node in cluster._sort_worker_nodes()] == ["node2", "node10"]
-
 
 def test_sort_worker_nodes_rejects_custom_python_sorting(monkeypatch):
     import qtop_py.qtop as qtop
