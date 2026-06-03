@@ -57,6 +57,7 @@ def parse_qtop_cmdline_args():
     parser.add_argument("-1", "--disablesection1", action="store_true", dest="sect_1_off", default=False, help="Disable first section of qtop, i.e. Job Accounting Summary")
     parser.add_argument("-2", "--disablesection2", action="store_true", dest="sect_2_off", default=False, help="Disable second section of qtop, i.e. Worker Node Occupancy")
     parser.add_argument("-3", "--disablesection3", action="store_true", dest="sect_3_off", default=False, help="Disable third section of qtop, i.e. User Accounts and Pool Mappings")
+    parser.add_argument("-4", "--accounttotals", action="store_true", dest="SHOW_ACCOUNT_TOTALS", default=False, help="Show totals row in User Accounts and Pool Mappings")
     parser.add_argument(
         "-a",
         "--blindremapping",
