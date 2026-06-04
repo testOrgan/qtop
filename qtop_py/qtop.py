@@ -1563,31 +1563,53 @@ class TextDisplay(object):
             % {"msg": "Grid certificate DN (info only available under elevated privileges)" if self.args.CLASSIC else "      GECOS field or Grid certificate DN |"}
         )
         for line in account_jobs_table:
-            uid, runningjobs, queuedjobs, alljobs, user, num_of_nodes = line
+            uid = line[0]
             userid_pat = userid_to_userid_re_pat[str(uid)]
+            self.display_account_jobs_line(line, userid_pat, detail_of_name)
 
-            if self.args.COLOR == "OFF" or userid_pat == "account_not_colored" or user_to_color.get(userid_pat) == "reset":
-                conditional_width = 0
-                userid_pat = "account_not_colored"
-            else:
-                conditional_width = 12
+        totals = self.account_jobs_totals(account_jobs_table) if getattr(self.args, "SHOW_ACCOUNT_TOTALS", False) else None
+        if totals:
+            self.display_account_jobs_line(totals, "account_not_colored", detail_of_name)
 
-            print_string = ("[ {0:<{width1}}] " "{4:<{width18}}{sep}" "{3:>{width4}}   {1:>{width4}}   {2:>{width4}} {sep} " "{6:>{width5}} {sep} " "{5:<{width40}} {sep}").format(
-                colorize(str(uid), pattern=userid_pat),
-                colorize(str(runningjobs), pattern=userid_pat),
-                colorize(str(queuedjobs), pattern=userid_pat),
-                colorize(str(alljobs), pattern=userid_pat),
-                colorize(user, pattern=userid_pat),
-                colorize(detail_of_name.get(user, ""), pattern=userid_pat),
-                colorize(num_of_nodes, pattern=userid_pat),
-                sep=colorize(config["SEPARATOR"], pattern=userid_pat),
-                width1=1 + conditional_width,
-                width4=4 + conditional_width,
-                width5=5 + conditional_width,
-                width18=18 + conditional_width,
-                width40=40 + conditional_width,
-            )
-            print(print_string)
+    @staticmethod
+    def account_jobs_totals(account_jobs_table):
+        if not account_jobs_table:
+            return None
+
+        return [
+            "T",
+            sum(int(line[1]) for line in account_jobs_table),
+            sum(int(line[2]) for line in account_jobs_table),
+            sum(int(line[3]) for line in account_jobs_table),
+            "Totals",
+            sum(int(line[5]) for line in account_jobs_table),
+        ]
+
+    def display_account_jobs_line(self, line, userid_pat, detail_of_name):
+        uid, runningjobs, queuedjobs, alljobs, user, num_of_nodes = line
+
+        if self.args.COLOR == "OFF" or userid_pat == "account_not_colored" or user_to_color.get(userid_pat) == "reset":
+            conditional_width = 0
+            userid_pat = "account_not_colored"
+        else:
+            conditional_width = 12
+
+        print_string = ("[ {0:<{width1}}] " "{4:<{width18}}{sep}" "{3:>{width4}}   {1:>{width4}}   {2:>{width4}} {sep} " "{6:>{width5}} {sep} " "{5:<{width40}} {sep}").format(
+            colorize(str(uid), pattern=userid_pat),
+            colorize(str(runningjobs), pattern=userid_pat),
+            colorize(str(queuedjobs), pattern=userid_pat),
+            colorize(str(alljobs), pattern=userid_pat),
+            colorize(user, pattern=userid_pat),
+            colorize(detail_of_name.get(user, ""), pattern=userid_pat),
+            colorize(str(num_of_nodes), pattern=userid_pat),
+            sep=colorize(config["SEPARATOR"], pattern=userid_pat),
+            width1=1 + conditional_width,
+            width4=4 + conditional_width,
+            width5=5 + conditional_width,
+            width18=18 + conditional_width,
+            width40=40 + conditional_width,
+        )
+        print(print_string)
 
     def display_matrix(self, wns_occupancy, print_char_start, print_char_stop):
         """

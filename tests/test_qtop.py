@@ -12,6 +12,9 @@
 import pytest
 import re
 import datetime
+import sys
+from qtop_py import qtop as qtop_module
+from qtop_py import utils as qtop_utils
 from qtop_py.qtop import (
     WNOccupancy,
     decide_batch_system,
@@ -19,6 +22,7 @@ from qtop_py.qtop import (
     SchedulerNotSpecified,
     NoSchedulerFound,
     get_date_obj_from_str,
+    TextDisplay,
 )
 
 
@@ -126,6 +130,78 @@ def test_create_user_job_counts_raises_jobnotfound():  # user_names, job_states,
             "exiting_of_user": {"sotiris": 0, "kostas": 1, "yannis": 0},
             "running_of_user": {"sotiris": 1, "yannis": 1},
         }
+
+
+@pytest.mark.parametrize("switch", ("-4", "--accounttotals"))
+def test_account_totals_cli_switch(monkeypatch, switch):
+    monkeypatch.setattr(sys, "argv", ["qtop", switch])
+
+    args = qtop_utils.parse_qtop_cmdline_args()
+
+    assert args.SHOW_ACCOUNT_TOTALS is True
+
+
+def test_display_user_accounts_pool_mappings_adds_totals(monkeypatch, capsys):
+    class Args(object):
+        COLOR = "OFF"
+        CLASSIC = False
+        SHOW_ACCOUNT_TOTALS = True
+
+    class WNSOccupancy(object):
+        account_jobs_table = [
+            ["0", 2, 3, 5, "alice", 1],
+            ["1", 4, 0, 4, "bob", 2],
+        ]
+        userid_to_userid_re_pat = {
+            "0": "account_not_colored",
+            "1": "account_not_colored",
+        }
+
+    args = Args()
+    monkeypatch.setattr(qtop_module, "args", args, raising=False)
+    monkeypatch.setattr(qtop_module, "config", {"SEPARATOR": "|"}, raising=False)
+    monkeypatch.setattr(qtop_module, "user_to_color", {}, raising=False)
+
+    wns_occupancy = WNSOccupancy()
+    display = TextDisplay(None, qtop_module.config, None, wns_occupancy, None, args)
+
+    display.display_user_accounts_pool_mappings(wns_occupancy)
+
+    output = capsys.readouterr().out
+    assert "[ T] Totals" in output
+    assert "|   9      6      3 |" in output
+    assert "|     3 |" in output
+
+
+def test_display_user_accounts_pool_mappings_hides_totals_by_default(monkeypatch, capsys):
+    class Args(object):
+        COLOR = "OFF"
+        CLASSIC = False
+        SHOW_ACCOUNT_TOTALS = False
+
+    class WNSOccupancy(object):
+        account_jobs_table = [
+            ["0", 2, 3, 5, "alice", 1],
+            ["1", 4, 0, 4, "bob", 2],
+        ]
+        userid_to_userid_re_pat = {
+            "0": "account_not_colored",
+            "1": "account_not_colored",
+        }
+
+    args = Args()
+    monkeypatch.setattr(qtop_module, "args", args, raising=False)
+    monkeypatch.setattr(qtop_module, "config", {"SEPARATOR": "|"}, raising=False)
+    monkeypatch.setattr(qtop_module, "user_to_color", {}, raising=False)
+
+    wns_occupancy = WNSOccupancy()
+    display = TextDisplay(None, qtop_module.config, None, wns_occupancy, None, args)
+
+    display.display_user_accounts_pool_mappings(wns_occupancy)
+
+    output = capsys.readouterr().out
+    assert "alice" in output
+    assert "[ T] Totals" not in output
 
 
 @pytest.mark.parametrize(
