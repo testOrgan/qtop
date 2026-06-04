@@ -1,5 +1,5 @@
-qtop.py guide
-=============
+qtop guide
+==========
 
 -  `Introduction <#introduction>`__
 -  `Quickstart <#quickstart>`__
@@ -18,56 +18,54 @@ Introduction
 Background
 ~~~~~~~~~~
 
-qtop.py is based on the same-titled bash script (well, minus the .py!)
-written by @fgeorgatos long ago. The main reason for rewriting it from
-scratch in python was the drive to add some much-needed functionality,
-which was getting harder and harder to do in bash. The new version of
-qtop.py is much more extendable, so as to be able to cooperate with more
-Local Resource Management Systems, such as Oracle/Sun Grid Engine
-(SGE/GE), LSF, LoadLeveler, OAR, SLURM etc. It's also less buggy, with
-most of the bugs of the old version eradicated ...and new ones
+qtop's Python version is based on the original qtop bash script written
+by @fgeorgatos long ago. The main reason for rewriting it from scratch
+in Python was the drive to add some much-needed functionality, which was
+getting harder and harder to do in bash. The Python version is much more
+extensible and can support more Local Resource Management Systems, such
+as Oracle/Sun Grid Engine (SGE/GE), LSF, LoadLeveler, OAR, SLURM etc.
+It's also less buggy, with most of the bugs of the old version eradicated
+...and new ones
 introduced ;-)
 
 Goals
 ~~~~~
 
-qtop.py is a tool written to summarize, textually and visually, the
-state of an Resource Management System, along with some relevant
-information around clusters, Grid-specific or independent. It gathers
-information from the Resource Management System and organises them in a
-compact yet illustrative format, for easy access. Expandability and
+qtop summarizes, textually and visually, the state of a Resource
+Management System, along with relevant cluster information. It gathers
+information from the Resource Management System and organises it in a
+compact yet illustrative format for easy access. Expandability and
 configurability were deemed very important and were taken into account
-from the very early stages of designing qtop.py. What's more, it is
-intended that the information that qtop.py gathers is reused by other
+from the very early stages of designing qtop. What's more, it is
+intended that the information gathered by qtop can be reused by other
 developers or system administrators, either for other purposes or in
-different visualisation formats/media. For this reason, qtop.py exports
-the gathered information to a convenient json format. Also, we have gone
-to great lengths to keep qtop.py dependency-free. That means, you don't
-have to download or install anything extra; qtop.py works out of the
-box!
+different visualisation formats/media. For this reason, qtop exports the
+gathered information to a convenient JSON format. The project also goes
+to great lengths to keep qtop dependency-free. That means, you don't
+have to download or install anything extra; qtop works out of the box!
 
 Quickstart
 ----------
 
-The absolute simplest way to get qtop.py to display *anything* is by
+The absolute simplest way to get qtop to display *anything* is by
 invoking it in demo mode:
 
 ::
 
-    ./qtop.py -b demo
+    ./qtop -b demo
 
 When used, the ``-b`` switch must always be followed by one of the
 supported batch systems (pbs, sge, oar, slurm, demo).
 
 That should create and destroy fictional jobs in fictional machines from
-fictional users, and display all that in a colorful, yet much unhelpful
-way. You see, the data produced is going to be probably more than a
-screenful, and so most of it is going to scroll up and away. If you want
-to start making any sense of it, you're better off trying this:
+fictional users, and display all that in a colorful but not yet very
+helpful way. The data produced will probably be more than a screenful,
+so most of it is going to scroll up and away. If you want to start
+making any sense of it, you're better off trying this:
 
 ::
 
-    ./qtop.py -b demo -w
+    ./qtop -b demo -w
 
 which keeps updating the screen with freshly made-up data, and also
 keeps you at the beginning of it. This is called the `watch
@@ -145,7 +143,7 @@ Output walkthrough
 The three qtop sections
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The information that qtop.py conveys when ran can be divided into three
+The information that qtop conveys when run can be divided into three
 sections:
 
 Accounting Summary
@@ -191,7 +189,6 @@ associated queues etc). |worker nodes occupancy|
 The default elements displayed are:
 
 Worker node ID (virtual or real node name)
-                                          
 
 .. figure:: images/wnid.png
    :alt: Worker Nodes ID
@@ -207,21 +204,23 @@ in place, giving consistent numbering starting from zero, to all nodes
 belonging to the cluster.
 
 Node state
-          
 
 .. figure:: images/node_state.png
    :alt: Node state
 
    Node state
 
-The node state is denoted with the first letter of the following, fi.
-for PBS: \* **j**\ ob-exclusive \* **b**\ usy \* **o**\ ffline \*
-**d**\ own
+The node state is denoted with the first letter of the state. For PBS,
+for example:
+
+-  **j**: job-exclusive
+-  **b**: busy
+-  **o**: offline
+-  **d**: down
 
 The symbol "**-**" is used when the node is free.
 
 Queue names
-           
 
 .. figure:: images/queue_name.png
    :alt: Queue name
@@ -232,10 +231,9 @@ The queue names sector shows the initials of the queue names loaded with
 jobs running on the specific worker node. The full names of the queues
 show up earlier in the Accounting Summary, color-coded in the same way.
 So if you have queues all starting with the same letter, e.g. grid3000M,
-grid2000M, grid5000M, the colouring will help you see which is
+grid2000M, grid5000M, the colouring will help you see which is which.
 
 Job allocation table
-                    
 
 .. figure:: images/cores.png
    :alt: Cores
@@ -306,7 +304,7 @@ Navigation
 +------------+-------------------------------+
 | shortcut   | function                      |
 +============+===============================+
-| j/k        | go to down/up one screen      |
+| j/k        | go down/up one screen         |
 +------------+-------------------------------+
 | h/l        | go to left/right one screen   |
 +------------+-------------------------------+
@@ -353,12 +351,14 @@ To replay from a specific point in time, the User must invoke:
 
 ::
 
-    ./qtop.py -R DATETIME [DURATION]
+    ./qtop -R DATETIME [DURATION]
 
-where ``DATETIME`` can either be \* ``yyyymmddTHHMMSS``, e.g.
-``20161118T182300`` (explicit form) \* ``HHMM``, e.g. ``1823`` (current
-day is implied, or the previous day, depending) \* ``mmddTHHMM``, e.g.
-``1118T1823`` (current year is implied)
+where ``DATETIME`` can be one of:
+
+-  ``yyyymmddTHHMMSS``, e.g. ``20161118T182300`` (explicit form)
+-  ``HHMM``, e.g. ``1823`` (current day is implied, or the previous day,
+   depending)
+-  ``mmddTHHMM``, e.g. ``1118T1823`` (current year is implied)
 
 Colons, slashes and dashes are also supported, so the User can type,
 e.g. 18:23, or 11/18T18:23, instead.
@@ -369,7 +369,7 @@ can either be ``h``, ``m``, ``s``. Example:
 
 ::
 
-    ./qtop.py -R 1823 1h
+    ./qtop -R 1823 1h
 
 A default duration of ``2m`` is used, if no value is given.
 
@@ -388,27 +388,21 @@ mode <#watch-mode>`__.
 The configuration file (qtopconf.yaml)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-YAML Format 
+YAML Format
 '''''''''''
 
 YAML was chosen as it is human-readable and should thus be easier for
 people to read and modify to their liking. That said, the configuration
 file is in a YAML-\ **like** format. It does not faithfully follow the
 format 100%, as it was written quickly. It was decided against using the
-standard PyYAML module for two reasons:
-
-1. support for python 2.5 was recently dropped, while we, on the other
-   hand, aim to keep supporting it
-2. we would very much like qtop to have zero dependencies, so that users
-   can just download and run it on their potentially "sui generis"
-   systems, without the need to download **any** extra packages.
+standard PyYAML module because qtop should keep its runtime dependency
+surface minimal. Users often run qtop on early or bare HPC systems where
+extra Python packages, internet access, or administrator-managed Python
+stacks may not be available.
 
 This has, unfortunately, resulted in some "quirks" in the YAMLish format
 now used, such as:
 
--  having to leave a blank line after every line of python code included
-   in the configuration file (cases such as this are found in lambda
-   expressions)
 -  having to end single-item lists in a comma, e.g. ``['^wn-26',]``
 -  two consecutive unindents not being allowed. There must always exist
    a once-unindented key-value after nested keys
@@ -446,21 +440,30 @@ Scheduler configuration area
             demo_file: %(savepath)s/demo%(pid)s.txt, echo 'Demo here'
     ---
 
-There are two ways to run qtop.py, data-wise: 1. run it on a Computing
-Element (or similar) where qtop.py itself invokes the commands needed to
-gather the cluster information 2. run it wherever, after the cluster
-information has been stored locally for qtop to read.
+There are two ways to run qtop, data-wise:
+
+1. run it on a batch controller (Computing Element), or similar host,
+   where qtop itself invokes the commands needed to gather the cluster
+   information
+2. run it wherever, after the cluster information has been stored locally
+   for qtop to read
+
+The second mode is handy for off-line debugging of qtop, running it in
+GitHub Codespaces, or using bare Linux containers on a laptop while away
+from the cluster.
 
 In this area of the configuration file, two key elements are set for
-each scheduler: \* the needed shell commands to run on the Computing
-Element \* the filepath where the cluster information is to be saved
+each scheduler:
+
+-  the needed shell commands to run on the Computing Element
+-  the filepath where the cluster information is to be saved
 
 So, let's say your nick is Mike and you are administering an OAR
 cluster. If you just invoke:
 
 ::
 
-    ./qtop.py -b oar
+    ./qtop -b oar
 
 then qtop is going to invoke ``oarnodes -s -Y``, ``oarnodes -Y``,
 ``oarstat`` consecutively, and store it, respectively, in
@@ -475,7 +478,7 @@ If, instead, you invoke it as follows:
 
 ::
 
-    ./qtop.py -b oar -s <path-to-cluster-information>
+    ./qtop -b oar -s <path-to-cluster-information>
 
 qtop will search for ``oarnodes_s_Y.txt``, ``oarnodes_Y.txt`` and
 ``oarstat.txt`` in ``<path-to-cluster-information>`` (retrieved by you,
@@ -486,7 +489,7 @@ matching the configured commands. For example:
 
 ::
 
-    ./qtop.py -b slurm -s <path-to-slurm-command-traces>
+    ./qtop -b slurm -s <path-to-slurm-command-traces>
 
 qtop will search for ``squeue.txt`` and ``sinfo.txt`` in
 ``<path-to-slurm-command-traces>``.
@@ -595,14 +598,17 @@ Color mappings
          - d: Red_LOnGrayBG
     ---
 
-Color mappings apply for now to three types of items: \* user ids \*
-queue name initials (in the queue name lines/columns) \* node state
+Color mappings apply for now to three types of items:
+
+-  user ids
+-  queue name initials, in the queue name lines/columns
+-  node state
 
 Color mappings can be described using `regular
-expressions <https://docs.python.org/2/library/re.html>`__. The standard
-RegEx python module ``re`` is used for parsing. Order here matters, so
-the expressions on the top of the list get overwritten by expressions on
-the bottom.
+expressions <https://docs.python.org/3/library/re.html>`__. The standard
+Python regular-expression module ``re`` is used for parsing. Order here
+matters, so the expressions on the top of the list get overwritten by
+expressions on the bottom.
 
 Colors with backgrounds can also be used: for all the color combinations
 available, check ``color_to_code`` dictionary in ``colormap.py``.
@@ -675,8 +681,8 @@ Usage tips
 
 -  Start with ``./qtop -b demo`` when testing terminal size, color, or
    keyboard navigation. It avoids accidental scheduler calls.
--  On a live cluster, pass ``-b pbs``, ``-b sge``, ``-b oar``, or ``-b slurm`` when
-   auto-detection is not enough.
+-  On a live cluster, pass ``-b pbs``, ``-b sge``, ``-b oar``, or
+   ``-b slurm`` when auto-detection is not enough.
 -  Use ``-s`` when another process has already collected scheduler
    output files. This is helpful for debugging and for reproducing an
    issue away from the cluster login node.

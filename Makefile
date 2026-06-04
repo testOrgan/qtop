@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help ci-deps test coverage sample-gate test-pbs-samples test-slurm-samples fortifications ruff-check lint format-check compat-py36 ci github-ci gitlab-ci build github-build gitlab-build dist version confirm
+.PHONY: help ci-deps test coverage sample-gate test-pbs-samples test-slurm-samples fortifications ruff-check lint lint-fix format-check format-fix compat-py36 ci github-ci gitlab-ci build github-build gitlab-build dist version confirm
 
 PYTHON ?= python3
 PIP ?= $(PYTHON) -m pip
@@ -44,10 +44,16 @@ fortifications: ## Check diff health and reject eval() call sites
 ruff-check: ## Run ruff against the source tree
 	$(PYTHON) -m ruff check .
 
-lint: fortifications ## Run dependency-light source and diff health checks
+lint: ruff-check fortifications ## Run dependency-light source and diff health checks
+
+lint-fix: ## Auto-fix ruff lint issues where possible
+	$(PYTHON) -m ruff check --fix .
 
 format-check: ## Check the branch diff for whitespace errors
 	git diff --check $(FORTIFY_BASE_REF)...HEAD
+
+format-fix: ## Auto-format Python files with ruff
+	$(PYTHON) -m ruff format .
 
 compat-py36: ## Run dependency-light Python 3.6 compatibility checks
 	find qtop_py tools -name '*.py' -print | xargs $(PYTHON) -m py_compile

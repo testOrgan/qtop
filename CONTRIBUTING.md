@@ -18,7 +18,11 @@ If AI assistance materially contributed to a change, disclose it briefly in the 
 Please follow common conventions for Open Source projects, f.i. align to Electron framework if still in doubt:
 - AI version disclosure is mandatory; with version, not just a name
 - `develop` branch should be used as source and target of PRs
-- avoid dependencies at all times: qtop is oftentimes run in protoclusters, before any more packages have arrived
+- avoid runtime dependencies whenever possible: qtop is often run in
+  protoclusters or early HPC environments before extra packages,
+  internet access, or administrator-managed Python stacks are available.
+  CI and developer-only dependencies should stay pinned and isolated from
+  the runtime path
 - provide at least one screenshot proving good conformance on python3.6/rhel8 because several clusters still use that
 - For source code contributions either a Developer Certificate of Origin (DCO) [1] [2] or a Contributor License Agreement (CLA) [3] may be acceptable. DCO is now enforced across the qtop project, so please align to it
 - A good bug report should be actionable, concise and detailed, allowing developers to reproduce the issue immediately
